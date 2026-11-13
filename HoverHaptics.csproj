@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <AssemblyName>HoverHapticsPlugin</AssemblyName>
+    <UseWPF>true</UseWPF>
+    <PluginApiDir Condition="'$(PluginApiDir)' == ''">C:\Program Files\Logi\LogiPluginService</PluginApiDir>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="PluginApi">
+      <HintPath>$(PluginApiDir)\PluginApi.dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+  <Target Name="CheckSdk" BeforeTargets="ResolveReferences">
+    <Error Condition="!Exists('$(PluginApiDir)\PluginApi.dll')" Text="Install current Logi Options+, or pass -p:PluginApiDir=PATH containing PluginApi.dll." />
+  </Target>
+</Project>

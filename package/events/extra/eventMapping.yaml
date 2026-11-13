@@ -1,0 +1,3 @@
+haptics:
+  haptic:
+    DEFAULT: subtle_collision

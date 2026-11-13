@@ -1,0 +1,15 @@
+type: plugin4
+name: HoverHaptics
+displayName: Hover Haptics
+description: Haptic pulse when the pointer rests on a window edge or a taskbar control.
+pluginFileName: HoverHapticsPlugin.dll
+version: 1.0
+foregroundColor: 4294967295
+textColor: 4294967295
+supportedDevices:
+  - LoupedeckCtFamily
+pluginFolderWin: bin
+pluginCapabilities:
+  - HasHapticMapping
+minimumLoupedeckVersion: 6.4
+license: MIT

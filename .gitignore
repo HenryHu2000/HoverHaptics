@@ -1,0 +1,6 @@
+bin/
+dist/
+obj/
+.tools/
+global.json
+HoverHaptics.lplug4
