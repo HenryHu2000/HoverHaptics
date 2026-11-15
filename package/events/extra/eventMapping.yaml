@@ -3,3 +3,5 @@ haptics:
     DEFAULT: subtle_collision
   button:
     DEFAULT: damp_collision
+  busy:
+    DEFAULT: wave

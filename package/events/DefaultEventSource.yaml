@@ -5,3 +5,6 @@ events:
   - name: button
     displayName: Hover
     description: Pointer rested on a taskbar control.
+  - name: busy
+    displayName: Hover
+    description: Pointer is busy.

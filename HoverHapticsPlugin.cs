@@ -13,10 +13,12 @@ public class HoverHapticsPlugin : Plugin
 {
     private const string EdgeEvent = "edge";
     private const string ButtonEvent = "button";
+    private const string BusyEvent = "busy";
     private const string MainTray = "Shell_TrayWnd";
     private const string SideTray = "Shell_SecondaryTrayWnd";
     private const int DwellMs = 50;
     private const int StillMs = 16;
+    private const int BusyMs = 3000;
     private const int Slack = 4;
     private const int We = 1, Ns = 2, Nwse = 3, Nesw = 4, Button = 5;
     public override bool UsesApplicationApiOnly => true;
@@ -24,16 +26,19 @@ public class HoverHapticsPlugin : Plugin
     private CancellationTokenSource stop;
     private static volatile Rect[] icons = Array.Empty<Rect>();
     private static bool busy;
-    private static IntPtr sizeWe, sizeNs, sizeNwse, sizeNesw;
+    private static IntPtr sizeWe, sizeNs, sizeNwse, sizeNesw, waitCursor, startingCursor;
 
     public override void Load()
     {
         PluginEvents.AddEvent(EdgeEvent, "Hover", "Pointer rested on a window edge.");
         PluginEvents.AddEvent(ButtonEvent, "Hover", "Pointer rested on a taskbar control.");
+        PluginEvents.AddEvent(BusyEvent, "Hover", "Pointer is busy.");
         sizeWe = LoadCursor(IntPtr.Zero, (IntPtr)32644);
         sizeNs = LoadCursor(IntPtr.Zero, (IntPtr)32645);
         sizeNwse = LoadCursor(IntPtr.Zero, (IntPtr)32642);
         sizeNesw = LoadCursor(IntPtr.Zero, (IntPtr)32643);
+        waitCursor = LoadCursor(IntPtr.Zero, (IntPtr)32514);
+        startingCursor = LoadCursor(IntPtr.Zero, (IntPtr)32650);
         timeBeginPeriod(1);
         stop?.Cancel();
         stop = new CancellationTokenSource();
@@ -58,6 +63,7 @@ public class HoverHapticsPlugin : Plugin
         Target held = default;
         var drag = false;
         int? gap = null;
+        var busyAt = unchecked(Environment.TickCount - BusyMs);
         var refreshed = Environment.TickCount;
         Refresh();
         while (!token.IsCancellationRequested)
@@ -67,23 +73,35 @@ public class HoverHapticsPlugin : Plugin
                 var cursor = new CursorInfo { Size = Marshal.SizeOf<CursorInfo>() };
                 if (GetCursorInfo(ref cursor) && cursor.Flags == 1)
                 {
-                    var next = Look(cursor, out var sizing);
-                    if (drag && !sizing && !next.IsEmpty && !next.IsButton)
+                    if (cursor.Cursor == waitCursor || cursor.Cursor == startingCursor)
                     {
-                        held = next;
-                        pending = default;
+                        var now = Environment.TickCount;
+                        if (unchecked(now - busyAt) >= BusyMs && !token.IsCancellationRequested)
+                        {
+                            busyAt = now;
+                            PluginEvents.RaiseEvent(BusyEvent);
+                        }
                     }
-                    else if (Advance(ref pending, ref since, ref armedX, ref armedY, ref held, ref gap, next, cursor.Position, Environment.TickCount, sizing) &&
-                        !token.IsCancellationRequested)
-                        PluginEvents.RaiseEvent(held.IsButton ? ButtonEvent : EdgeEvent);
-                    else if (next.IsEmpty && !Near(held, cursor.Position) &&
-                             unchecked(Environment.TickCount - refreshed) > 300)
+                    else
                     {
-                        refreshed = Environment.TickCount;
-                        if (icons.Length == 0 || OnTaskbar(cursor.Position))
-                            Refresh();
+                        var next = Look(cursor, out var sizing);
+                        if (drag && !sizing && !next.IsEmpty && !next.IsButton)
+                        {
+                            held = next;
+                            pending = default;
+                        }
+                        else if (Advance(ref pending, ref since, ref armedX, ref armedY, ref held, ref gap, next, cursor.Position, Environment.TickCount, sizing) &&
+                            !token.IsCancellationRequested)
+                            PluginEvents.RaiseEvent(held.IsButton ? ButtonEvent : EdgeEvent);
+                        else if (next.IsEmpty && !Near(held, cursor.Position) &&
+                                 unchecked(Environment.TickCount - refreshed) > 300)
+                        {
+                            refreshed = Environment.TickCount;
+                            if (icons.Length == 0 || OnTaskbar(cursor.Position))
+                                Refresh();
+                        }
+                        drag = sizing;
                     }
-                    drag = sizing;
                 }
             }
             catch (Exception) { }
