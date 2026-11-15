@@ -1,4 +1,7 @@
 events:
-  - name: haptic
+  - name: edge
     displayName: Hover
-    description: Pointer rested on a window edge or a taskbar control.
+    description: Pointer rested on a window edge.
+  - name: button
+    displayName: Hover
+    description: Pointer rested on a taskbar control.

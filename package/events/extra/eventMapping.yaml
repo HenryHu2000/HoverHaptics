@@ -1,3 +1,5 @@
 haptics:
-  haptic:
+  edge:
     DEFAULT: subtle_collision
+  button:
+    DEFAULT: damp_collision

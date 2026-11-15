@@ -11,7 +11,8 @@ namespace HoverHaptics;
 
 public class HoverHapticsPlugin : Plugin
 {
-    private const string EventName = "haptic";
+    private const string EdgeEvent = "edge";
+    private const string ButtonEvent = "button";
     private const string MainTray = "Shell_TrayWnd";
     private const string SideTray = "Shell_SecondaryTrayWnd";
     private const int DwellMs = 50;
@@ -27,7 +28,8 @@ public class HoverHapticsPlugin : Plugin
 
     public override void Load()
     {
-        PluginEvents.AddEvent(EventName, "Hover", "Pointer rested on a window edge or a taskbar control.");
+        PluginEvents.AddEvent(EdgeEvent, "Hover", "Pointer rested on a window edge.");
+        PluginEvents.AddEvent(ButtonEvent, "Hover", "Pointer rested on a taskbar control.");
         sizeWe = LoadCursor(IntPtr.Zero, (IntPtr)32644);
         sizeNs = LoadCursor(IntPtr.Zero, (IntPtr)32645);
         sizeNwse = LoadCursor(IntPtr.Zero, (IntPtr)32642);
@@ -73,7 +75,7 @@ public class HoverHapticsPlugin : Plugin
                     }
                     else if (Advance(ref pending, ref since, ref armedX, ref armedY, ref held, ref gap, next, cursor.Position, Environment.TickCount, sizing) &&
                         !token.IsCancellationRequested)
-                        PluginEvents.RaiseEvent(EventName);
+                        PluginEvents.RaiseEvent(held.IsButton ? ButtonEvent : EdgeEvent);
                     else if (next.IsEmpty && !Near(held, cursor.Position) &&
                              unchecked(Environment.TickCount - refreshed) > 300)
                     {
